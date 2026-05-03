@@ -71,4 +71,8 @@ export async function build(opts: { testing?: boolean } = {}) {
 if (process.env.NODE_ENV !== 'test') {
   const app = await build();
   await app.listen({ port: Number(process.env.PORT ?? 3000), host: '0.0.0.0' });
+
+  // Start background workers
+  await import('./workers/analysis.worker.js');
+  console.info('[worker] Analysis worker started');
 }

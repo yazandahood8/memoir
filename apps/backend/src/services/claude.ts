@@ -1,14 +1,26 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Entry } from '@memoir/shared';
 
-const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 export interface EntryAnalysis {
   emotions: Record<string, number>;
   people: string[];
   topics: string[];
   key_moment: string;
 }
+
+const STUB_ANALYSIS: EntryAnalysis = {
+  emotions: {
+    joy: 0.6, contentment: 0.5, reflection: 0.4, nostalgia: 0.2,
+    sadness: 0.0, wonder: 0.3, stress: 0.1, gratitude: 0.4,
+  },
+  people: [],
+  topics: ['daily life'],
+  key_moment: 'A moment captured in time',
+};
+
+const STUB_CHAPTER = `There are moments that resist being named — quiet intersections of time and feeling that only reveal their meaning in retrospect.
+
+This is a preview of your memoir chapter. Add your ANTHROPIC_API_KEY to generate a personalised literary narrative from your entries.`;
 
 function buildAnalysisPrompt(transcript: string): string {
   return `Analyze this journal entry. Respond ONLY with valid JSON. No explanation.
@@ -56,6 +68,11 @@ export async function analyzeEntry(
   transcript: string,
   imageUrls: string[] = []
 ): Promise<EntryAnalysis> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return { ...STUB_ANALYSIS };
+  }
+
+  const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const content: Anthropic.MessageParam['content'] = [
     { type: 'text', text: buildAnalysisPrompt(transcript) },
   ];
@@ -86,6 +103,11 @@ export async function writeChapter(
   collectionName: string,
   dateRange: string
 ): Promise<string> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return STUB_CHAPTER;
+  }
+
+  const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const content: Anthropic.MessageParam['content'] = [
     { type: 'text', text: buildChapterPrompt(entries, style, collectionName, dateRange) },
   ];
@@ -112,21 +134,24 @@ export async function writeChapter(
 }
 
 export async function writeDigest(transcripts: string[], period: string): Promise<string> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return `Weekly digest for ${period}\n\nYou recorded ${transcripts.length} ${transcripts.length === 1 ? 'entry' : 'entries'} this week. Add your ANTHROPIC_API_KEY to generate your personalised digest.`;
+  }
+
+  const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const joined = transcripts.join('\n\n');
   const response = await claude.messages.create({
     model: 'claude-opus-4-5',
     max_tokens: 600,
-    messages: [
-      {
-        role: 'user',
-        content: `Write a warm weekly digest (150–250 words).
+    messages: [{
+      role: 'user',
+      content: `Write a warm weekly digest (150–250 words).
 Period: ${period}
 Include: emotional tone, most memorable moment, one pattern noticed, encouraging closing.
 
 Entries:
 ${joined}`,
-      },
-    ],
+    }],
   });
   return (response.content[0] as { type: 'text'; text: string }).text;
 }

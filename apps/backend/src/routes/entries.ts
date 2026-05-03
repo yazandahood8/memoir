@@ -54,8 +54,9 @@ export async function entriesRoutes(app: FastifyInstance) {
       return reply.status(500).send({ error: 'Failed to create entry' });
     }
 
-    // Queue AI processing
-    await entryProcessingQueue.add('process-entry', { entryId: entry.id });
+    // Queue AI processing (fire-and-forget — entry saves even if Redis is down)
+    entryProcessingQueue.add('process-entry', { entryId: entry.id })
+      .catch((err: Error) => console.error('[queue] Failed to enqueue entry:', err.message));
 
     return reply.status(201).send(entry);
   });
