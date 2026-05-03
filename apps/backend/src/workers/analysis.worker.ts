@@ -3,7 +3,7 @@ import { connection } from '../lib/queue.js';
 import { supabase } from '../lib/supabase.js';
 import { transcribe } from '../services/whisper.js';
 import { analyzeEntry, writeChapter } from '../services/claude.js';
-import { anonymize, deanonymize } from '../services/anonymizer.js';
+import { anonymize } from '../services/anonymizer.js';
 import { generateAndSaveEmbedding } from '../services/embeddings.js';
 
 export const analysisWorker = new Worker(
@@ -17,6 +17,18 @@ export const analysisWorker = new Worker(
   },
   { connection }
 );
+
+analysisWorker.on('completed', (job) => {
+  console.info(`[worker] ${job.name} ${job.id} completed`);
+});
+
+analysisWorker.on('failed', (job, err) => {
+  console.error(`[worker] ${job?.name} ${job?.id} failed:`, err.message);
+});
+
+analysisWorker.on('error', (err) => {
+  console.error('[worker] Redis connection error:', err.message);
+});
 
 async function processEntry(entryId: string) {
   const { data: entry } = await supabase
