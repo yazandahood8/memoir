@@ -1,0 +1,21 @@
+{
+  "name": "memoir",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/mobile",
+    "apps/backend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev:backend": "cd apps/backend && npm run dev",
+    "dev:mobile": "cd apps/mobile && npx expo start",
+    "test:mobile": "cd apps/mobile && npm test",
+    "test:backend": "cd apps/backend && npm test",
+    "lint": "npm run lint --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
