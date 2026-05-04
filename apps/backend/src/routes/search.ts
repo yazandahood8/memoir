@@ -2,8 +2,6 @@ import type { FastifyInstance } from 'fastify';
 import { supabase } from '../lib/supabase.js';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 export async function searchRoutes(app: FastifyInstance) {
   app.post('/', async (request, reply) => {
     const userId = (request.user as { sub: string }).sub;
@@ -18,6 +16,11 @@ export async function searchRoutes(app: FastifyInstance) {
       return reply.status(403).send({ error: 'Semantic search requires Premium' });
     }
 
+    if (!process.env.OPENAI_API_KEY) {
+      return reply.send({ results: [], stub: true });
+    }
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const { data: embedding } = await openai.embeddings.create({
       model: 'text-embedding-3-small',
       input: query,

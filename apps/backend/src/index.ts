@@ -8,6 +8,7 @@ import { entriesRoutes } from './routes/entries.js';
 import { collectionsRoutes } from './routes/collections.js';
 import { chaptersRoutes } from './routes/chapters.js';
 import { searchRoutes } from './routes/search.js';
+import { digestsRoutes } from './routes/digests.js';
 import { webhooksRoutes } from './routes/webhooks.js';
 
 export async function build(opts: { testing?: boolean } = {}) {
@@ -61,6 +62,7 @@ export async function build(opts: { testing?: boolean } = {}) {
   await app.register(collectionsRoutes, { prefix: '/collections' });
   await app.register(chaptersRoutes, { prefix: '/chapters' });
   await app.register(searchRoutes, { prefix: '/search' });
+  await app.register(digestsRoutes, { prefix: '/digests' });
   await app.register(webhooksRoutes, { prefix: '/webhooks' });
 
   app.get('/health', async () => ({ status: 'ok' }));
@@ -75,4 +77,14 @@ if (process.env.NODE_ENV !== 'test') {
   // Start background workers
   await import('./workers/analysis.worker.js');
   console.info('[worker] Analysis worker started');
+
+  const { digestWorker } = await import('./workers/digest.worker.js');
+  digestWorker.on('completed', (job) => console.info(`[digest] ${job.name} completed`));
+  digestWorker.on('failed', (job, err) => console.error(`[digest] ${job?.name} failed:`, err.message));
+  console.info('[worker] Digest worker started');
+
+  // Schedule weekly (Fridays 8am) and monthly (1st of month 8am) digest jobs
+  const { digestQueue } = await import('./lib/queue.js');
+  await digestQueue.add('weekly-digest', {}, { repeat: { pattern: '0 8 * * 5' }, jobId: 'weekly-digest' });
+  await digestQueue.add('monthly-digest', {}, { repeat: { pattern: '0 8 1 * *' }, jobId: 'monthly-digest' });
 }

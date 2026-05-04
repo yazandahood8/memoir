@@ -103,7 +103,12 @@ export default function AddEntriesScreen() {
         }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>No entries yet. Create some entries first.</Text>
+            <Text style={styles.emptyIcon}>📝</Text>
+            <Text style={styles.emptyTitle}>No entries yet</Text>
+            <Text style={styles.emptyText}>Record a voice memo or write a text entry first, then add it here.</Text>
+            <TouchableOpacity style={styles.createBtn} onPress={() => router.replace('/entry/new')}>
+              <Text style={styles.createBtnText}>Create your first entry →</Text>
+            </TouchableOpacity>
           </View>
         }
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -141,5 +146,9 @@ const styles = StyleSheet.create({
   rowPreview: { fontSize: 14, color: '#ccc', lineHeight: 20 },
   rowDate: { fontSize: 11, color: '#555', marginTop: 4 },
   empty: { padding: 40, alignItems: 'center' },
-  emptyText: { color: '#555', textAlign: 'center' },
+  emptyIcon: { fontSize: 40, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#fff', marginBottom: 8 },
+  emptyText: { color: '#555', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  createBtn: { backgroundColor: '#6c63ff', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12 },
+  createBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
 });

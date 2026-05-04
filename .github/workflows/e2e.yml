@@ -5,6 +5,7 @@ on:
     branches: [main]
   schedule:
     - cron: '0 2 * * *'
+  workflow_dispatch:
 
 jobs:
   e2e-ios:
@@ -20,7 +21,7 @@ jobs:
         run: cd apps/mobile && npx detox build --configuration ios.sim.debug
       - name: Run Detox E2E
         run: cd apps/mobile && npx detox test --configuration ios.sim.debug --ci
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: detox-artifacts-ios
