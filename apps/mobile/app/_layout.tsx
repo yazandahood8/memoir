@@ -31,7 +31,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (loading) return;
     const inAuth = segments[0] === '(auth)';
     if (!session && !inAuth) router.replace('/(auth)/login');
-    if (session && inAuth) router.replace('/(tabs)/');
+    if (session && inAuth) router.replace('/');
   }, [session, loading, segments]);
 
   return <>{children}</>;
