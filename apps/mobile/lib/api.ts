@@ -90,4 +90,9 @@ export const api = {
         body: JSON.stringify({ query: q }),
       }),
   },
+
+  digests: {
+    list: () => request<Digest[]>('/digests'),
+    get: (id: string) => request<Digest>(`/digests/${id}`),
+  },
 };

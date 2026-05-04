@@ -290,14 +290,14 @@ const DEFAULTS = [
   { id:'MEM-27', title:'Photo Tests', desc:'Unit tests: image compression utility, Claude vision request builder. E2E: paywall for free user on photo tap. E2E: premium user attaches and saves photo.', type:'test', sprint:'s3', epic:'E5', pts:5, col:'done' },
 
   // ── SPRINT 4 — Search + Digests ──────────────────────────────────────────
-  { id:'MEM-28', title:'Semantic Search API (Backend)', desc:'POST /search — generate query embedding, pgvector cosine similarity search, return top 10 entries with similarity score.', type:'task', sprint:'s4', epic:'E6', pts:5, col:'todo' },
-  { id:'MEM-29', title:'Search Screen (Mobile)', desc:'As a premium user, I can search memories with natural language. Input: "every time I felt homesick". Similarity-ranked results. Paywall for free users.', type:'story', sprint:'s4', epic:'E6', pts:5, col:'todo' },
-  { id:'MEM-30', title:'Search Tests', desc:'Backend: search endpoint with mock pgvector. Mobile: search screen component tests.', type:'test', sprint:'s4', epic:'E6', pts:3, col:'todo' },
-  { id:'MEM-31', title:'Weekly Digest Worker', desc:'Cron job every Friday 8am (user timezone). Fetch entries from past 7 days. Build digest prompt. Generate with Claude. Save to digests table. Push + email via Resend.', type:'task', sprint:'s4', epic:'E7', pts:5, col:'todo' },
-  { id:'MEM-32', title:'Monthly Digest Worker', desc:'Cron job on last day of month. Premium users only. Deeper analysis: top emotions, patterns, key people. Send via push + email.', type:'task', sprint:'s4', epic:'E7', pts:5, col:'todo' },
-  { id:'MEM-33', title:'Digest Display Screen (Mobile)', desc:'Digest cards with week/month label, summary text. Archive list sorted by date. Weekly digest for free, monthly for premium.', type:'story', sprint:'s4', epic:'E7', pts:3, col:'todo' },
-  { id:'MEM-34', title:'Digest Tests', desc:'Unit tests: digest workers (mock Claude), cron scheduling logic. Integration test: digest email sending (Resend mock).', type:'test', sprint:'s4', epic:'E7', pts:3, col:'todo' },
-  { id:'MEM-50', title:'E2E Pipeline', desc:'Create e2e.yml GitHub Actions pipeline. Run on PRs to main. Run nightly on schedule. Upload Detox artifacts on failure.', type:'task', sprint:'s4', epic:'E12', pts:3, col:'todo' },
+  { id:'MEM-28', title:'Semantic Search API (Backend)', desc:'POST /search — generate query embedding, pgvector cosine similarity search, return top 10 entries with similarity score.', type:'task', sprint:'s4', epic:'E6', pts:5, col:'done' },
+  { id:'MEM-29', title:'Search Screen (Mobile)', desc:'As a premium user, I can search memories with natural language. Input: "every time I felt homesick". Similarity-ranked results. Paywall for free users.', type:'story', sprint:'s4', epic:'E6', pts:5, col:'done' },
+  { id:'MEM-30', title:'Search Tests', desc:'Backend: search endpoint with mock pgvector. Mobile: search screen component tests.', type:'test', sprint:'s4', epic:'E6', pts:3, col:'done' },
+  { id:'MEM-31', title:'Weekly Digest Worker', desc:'Cron job every Friday 8am (user timezone). Fetch entries from past 7 days. Build digest prompt. Generate with Claude. Save to digests table. Push + email via Resend.', type:'task', sprint:'s4', epic:'E7', pts:5, col:'done' },
+  { id:'MEM-32', title:'Monthly Digest Worker', desc:'Cron job on last day of month. Premium users only. Deeper analysis: top emotions, patterns, key people. Send via push + email.', type:'task', sprint:'s4', epic:'E7', pts:5, col:'done' },
+  { id:'MEM-33', title:'Digest Display Screen (Mobile)', desc:'Digest cards with week/month label, summary text. Archive list sorted by date. Weekly digest for free, monthly for premium.', type:'story', sprint:'s4', epic:'E7', pts:3, col:'done' },
+  { id:'MEM-34', title:'Digest Tests', desc:'Unit tests: digest workers (mock Claude), cron scheduling logic. Integration test: digest email sending (Resend mock).', type:'test', sprint:'s4', epic:'E7', pts:3, col:'done' },
+  { id:'MEM-50', title:'E2E Pipeline', desc:'Create e2e.yml GitHub Actions pipeline. Run on PRs to main. Run nightly on schedule. Upload Detox artifacts on failure.', type:'task', sprint:'s4', epic:'E12', pts:3, col:'done' },
 
   // ── SPRINT 5 — Monetization + Security + Export ──────────────────────────
   { id:'MEM-35', title:'RevenueCat Setup', desc:'Create RevenueCat project. Configure iOS + Android products ($7/month, $60/year). 14-day free trial. Install react-native-purchases SDK. Hook up to user account.', type:'task', sprint:'s5', epic:'E8', pts:5, col:'todo' },

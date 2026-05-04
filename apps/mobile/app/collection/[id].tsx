@@ -88,7 +88,10 @@ export default function CollectionDetailScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>No entries yet. Add entries from the main timeline.</Text>
+            <Text style={styles.emptyText}>
+              Tap <Text style={styles.emptyHighlight}>+</Text> to add entries from your journal, or{' '}
+              <Text style={styles.emptyHighlight}>create a new entry</Text> from the Entries tab first.
+            </Text>
           </View>
         }
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -120,6 +123,7 @@ const styles = StyleSheet.create({
   closeBtnText: { color: '#6c63ff', fontWeight: '600' },
   empty: { padding: 32, alignItems: 'center' },
   emptyText: { color: '#555', textAlign: 'center', lineHeight: 22 },
+  emptyHighlight: { color: '#6c63ff', fontWeight: '600' },
   fab: {
     position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28,
     backgroundColor: '#6c63ff', justifyContent: 'center', alignItems: 'center', elevation: 6,

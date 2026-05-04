@@ -47,12 +47,16 @@ async function runWeeklyDigests() {
       period_end: now.toISOString(),
     });
 
-    await resend.emails.send({
-      from: 'Memoir <digest@getmemoir.com>',
-      to: user.email,
-      subject: 'Your weekly memoir digest',
-      html: `<p>${content.replace(/\n/g, '<br>')}</p>`,
-    });
+    if (process.env.RESEND_API_KEY) {
+      await resend.emails.send({
+        from: 'Memoir <digest@getmemoir.com>',
+        to: user.email,
+        subject: 'Your weekly memoir digest',
+        html: `<p>${content.replace(/\n/g, '<br>')}</p>`,
+      });
+    } else {
+      console.log(`[digest] weekly digest saved for ${user.email} (email skipped — no RESEND_API_KEY)`);
+    }
   }
 }
 
@@ -89,11 +93,15 @@ async function runMonthlyDigests() {
       period_end: now.toISOString(),
     });
 
-    await resend.emails.send({
-      from: 'Memoir <digest@getmemoir.com>',
-      to: user.email,
-      subject: 'Your monthly memoir digest',
-      html: `<p>${content.replace(/\n/g, '<br>')}</p>`,
-    });
+    if (process.env.RESEND_API_KEY) {
+      await resend.emails.send({
+        from: 'Memoir <digest@getmemoir.com>',
+        to: user.email,
+        subject: 'Your monthly memoir digest',
+        html: `<p>${content.replace(/\n/g, '<br>')}</p>`,
+      });
+    } else {
+      console.log(`[digest] monthly digest saved for ${user.email} (email skipped — no RESEND_API_KEY)`);
+    }
   }
 }

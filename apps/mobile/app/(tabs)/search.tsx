@@ -5,6 +5,7 @@ import {
 import { useRouter } from 'expo-router';
 import { api } from '@/lib/api';
 import { EntryCard } from '@/components/EntryCard';
+import { Paywall } from '@/components/Paywall';
 import type { Entry } from '@memoir/shared';
 
 export default function SearchScreen() {
@@ -12,17 +13,21 @@ export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Array<Entry & { similarity: number }>>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [searched, setSearched] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   async function handleSearch() {
     if (!query.trim()) return;
     setLoading(true);
-    setError('');
+    setSearched(true);
     try {
       const data = await api.search.query(query);
       setResults(data.results);
     } catch (e: unknown) {
-      setError((e as Error).message);
+      const msg = (e as Error).message;
+      if (msg.toLowerCase().includes('premium')) {
+        setShowPaywall(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -30,8 +35,18 @@ export default function SearchScreen() {
 
   return (
     <View style={styles.container}>
+      {showPaywall && (
+        <Paywall
+          feature="search"
+          plan="free"
+          onUpgrade={() => { setShowPaywall(false); router.push('/(tabs)/profile'); }}
+          onDismiss={() => setShowPaywall(false)}
+        />
+      )}
+
       <View style={styles.searchRow}>
         <TextInput
+          testID="search-input"
           style={styles.input}
           placeholder="Search your memories…"
           placeholderTextColor="#555"
@@ -45,8 +60,6 @@ export default function SearchScreen() {
         </TouchableOpacity>
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
       {loading ? (
         <ActivityIndicator color="#6c63ff" style={{ marginTop: 40 }} />
       ) : (
@@ -57,8 +70,20 @@ export default function SearchScreen() {
             <EntryCard entry={item} onPress={(id) => router.push(`/entry/${id}`)} />
           )}
           ListEmptyComponent={
-            query.length > 0 && !loading ? (
-              <Text style={styles.noResults}>No memories found for "{query}"</Text>
+            searched && !loading ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyIcon}>🔍</Text>
+                <Text style={styles.emptyTitle}>No memories found</Text>
+                <Text style={styles.emptyText}>Try different words or add more journal entries.</Text>
+              </View>
+            ) : !searched ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyIcon}>✨</Text>
+                <Text style={styles.emptyTitle}>Search your memories</Text>
+                <Text style={styles.emptyText}>
+                  Use natural language — "every time I felt homesick" or "my best meals abroad".
+                </Text>
+              </View>
             ) : null
           }
           contentContainerStyle={{ paddingBottom: 40 }}
@@ -80,6 +105,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   searchBtnText: { color: '#fff', fontWeight: '600' },
-  error: { color: '#ff6b6b', marginBottom: 12, textAlign: 'center' },
-  noResults: { color: '#888', textAlign: 'center', marginTop: 40 },
+  empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 40, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#fff', marginBottom: 8 },
+  emptyText: { color: '#555', textAlign: 'center', lineHeight: 22 },
 });
