@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Memoir — Project Board</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --purple: #a371f7;
+    --purple-dim: #2d1f5e;
+    --blue: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --orange: #f0883e;
+    --teal: #39d353;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: auto; }
+
+  /* HEADER */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 18px; font-weight: 700; background: linear-gradient(135deg, var(--purple), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -.3px; }
+  .hd { color: var(--border); }
+  .htitle { font-size: 13px; color: var(--muted); }
+  .hstats { margin-left: auto; display: flex; gap: 18px; font-size: 12px; color: var(--muted); }
+  .hstats b { color: var(--text); font-weight: 600; }
+  .progress-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: linear-gradient(90deg, var(--purple), var(--blue)); transition: width .4s ease; }
+
+  /* TOOLBAR */
+  .toolbar { padding: 10px 20px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .fl { font-size: 11px; color: var(--muted); margin-right: 2px; }
+  .sep { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
+  .pill { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all .12s; }
+  .pill:hover { border-color: var(--purple); color: var(--purple); }
+  .pill.active { border-color: var(--purple); background: var(--purple-dim); color: var(--purple); }
+  .pill.epic-active { opacity: 1; }
+
+  /* BOARD */
+  .board { display: flex; gap: 14px; padding: 16px 20px; min-height: calc(100vh - 108px); align-items: flex-start; }
+  .column { flex: 1; min-width: 255px; max-width: 310px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+  .col-header { padding: 11px 13px; display: flex; align-items: center; gap: 7px; border-bottom: 1px solid var(--border); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .col-todo .dot    { background: var(--muted); }
+  .col-progress .dot { background: var(--blue); }
+  .col-test .dot    { background: var(--yellow); }
+  .col-done .dot    { background: var(--green); }
+  .col-name { font-size: 12px; font-weight: 600; flex: 1; }
+  .col-cnt { background: var(--surface2); color: var(--muted); font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 8px; }
+  .col-pts { font-size: 10px; color: var(--muted); margin-left: 2px; }
+
+  .cards { padding: 8px; display: flex; flex-direction: column; gap: 7px; min-height: 50px; flex: 1; transition: background .12s; }
+  .cards.over { background: rgba(163,113,247,.07); border-radius: 6px; }
+
+  /* CARD */
+  .card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; cursor: grab; transition: transform .12s, box-shadow .12s, border-color .12s; user-select: none; }
+  .card:hover { border-color: var(--purple); box-shadow: 0 3px 12px rgba(0,0,0,.5); transform: translateY(-1px); }
+  .card:active { cursor: grabbing; }
+  .card.dragging { opacity: .4; transform: scale(.97); }
+  .card.hidden { display: none; }
+
+  .ct { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+  .cid { font-size: 10px; font-weight: 700; color: var(--purple); font-family: monospace; }
+  .ctype { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 600; margin-left: auto; }
+  .t-feature { background: rgba(88,166,255,.14); color: var(--blue); }
+  .t-story   { background: rgba(163,113,247,.14); color: var(--purple); }
+  .t-task    { background: rgba(125,133,144,.14); color: var(--muted); }
+  .t-bug     { background: rgba(248,81,73,.14);  color: var(--red); }
+  .t-test    { background: rgba(240,136,62,.14);  color: var(--orange); }
+  .t-spike   { background: rgba(57,211,83,.1);   color: var(--teal); }
+
+  .ctitle { font-size: 12px; font-weight: 500; line-height: 1.4; margin-bottom: 5px; }
+  .cdesc  { font-size: 10px; color: var(--muted); line-height: 1.4; margin-bottom: 7px; }
+
+  .cf { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .stag { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+  .s1 { background: rgba(63,185,80,.1);  color: #3fb950; }
+  .s2 { background: rgba(163,113,247,.13); color: var(--purple); }
+  .s3 { background: rgba(88,166,255,.12); color: var(--blue); }
+  .s4 { background: rgba(209,170,34,.1); color: var(--yellow); }
+  .s5 { background: rgba(248,81,73,.1);  color: var(--red); }
+  .s6 { background: rgba(240,136,62,.1); color: var(--orange); }
+  .etag { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 500; background: rgba(125,133,144,.1); color: var(--muted); }
+  .pts { font-size: 9px; color: var(--muted); margin-left: auto; }
+
+  .cmv { display: flex; gap: 3px; }
+  .mv { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 3px; font-size: 10px; padding: 1px 6px; cursor: pointer; transition: all .1s; }
+  .mv:hover { border-color: var(--purple); color: var(--purple); }
+
+  /* EMPTY */
+  .empty-col { text-align: center; padding: 20px 10px; color: var(--muted); font-size: 11px; }
+
+  /* ADD BTN */
+  .add-btn { margin: 8px; width: calc(100% - 16px); padding: 6px; background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); font-size: 11px; cursor: pointer; transition: all .12s; }
+  .add-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+  /* MODAL */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 450px; max-width: 95vw; }
+  .modal h2 { font-size: 15px; margin-bottom: 14px; }
+  .modal label { display: block; font-size: 11px; color: var(--muted); margin: 10px 0 3px; }
+  .modal input, .modal select, .modal textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; padding: 7px 9px; outline: none; font-family: inherit; }
+  .modal textarea { height: 65px; resize: vertical; }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--purple); }
+  .mrow { display: flex; gap: 10px; }
+  .mrow > div { flex: 1; }
+  .macts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all .12s; }
+  .btn-p { background: var(--purple); color: #fff; }
+  .btn-p:hover { background: #b088fa; }
+  .btn-c { background: transparent; border-color: var(--border); color: var(--muted); }
+  .btn-c:hover { border-color: var(--muted); color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">memoir</div>
+  <div class="hd">/</div>
+  <div class="htitle">Project Board</div>
+  <div class="hstats">
+    <div>Total <b id="st-total">0</b></div>
+    <div>Done <b id="st-done">0</b></div>
+    <div>Points <b id="st-pts">0</b></div>
+    <div>Progress <b id="st-pct">0%</b></div>
+  </div>
+  <div class="progress-bar" id="pbar" style="width:0%"></div>
+</header>
+
+<div class="toolbar">
+  <span class="fl">Sprint</span>
+  <button class="pill active" onclick="setFilter('sprint','all',this)">All</button>
+  <button class="pill" onclick="setFilter('sprint','s1',this)">S1 — Foundation</button>
+  <button class="pill" onclick="setFilter('sprint','s2',this)">S2 — AI + Collections</button>
+  <button class="pill" onclick="setFilter('sprint','s3',this)">S3 — Chapters + Photos</button>
+  <button class="pill" onclick="setFilter('sprint','s4',this)">S4 — Search + Digests</button>
+  <button class="pill" onclick="setFilter('sprint','s5',this)">S5 — Monetization</button>
+  <button class="pill" onclick="setFilter('sprint','s6',this)">S6 — Launch</button>
+  <div class="sep"></div>
+  <span class="fl">Epic</span>
+  <button class="pill active" onclick="setFilter('epic','all',this)">All</button>
+  <button class="pill" onclick="setFilter('epic','E1',this)">E1 Foundation</button>
+  <button class="pill" onclick="setFilter('epic','E2',this)">E2 AI Pipeline</button>
+  <button class="pill" onclick="setFilter('epic','E3',this)">E3 Collections</button>
+  <button class="pill" onclick="setFilter('epic','E4',this)">E4 Chapters</button>
+  <button class="pill" onclick="setFilter('epic','E5',this)">E5 Photos</button>
+  <button class="pill" onclick="setFilter('epic','E6',this)">E6 Search</button>
+  <button class="pill" onclick="setFilter('epic','E7',this)">E7 Digests</button>
+  <button class="pill" onclick="setFilter('epic','E8',this)">E8 Monetization</button>
+  <button class="pill" onclick="setFilter('epic','E9',this)">E9 Security</button>
+  <button class="pill" onclick="setFilter('epic','E10',this)">E10 Export</button>
+  <button class="pill" onclick="setFilter('epic','E11',this)">E11 Testing</button>
+  <button class="pill" onclick="setFilter('epic','E12',this)">E12 CI/CD</button>
+  <button class="pill" onclick="setFilter('epic','E13',this)">E13 Launch</button>
+</div>
+
+<div class="board">
+  <div class="column col-todo">
+    <div class="col-header"><div class="dot"></div><div class="col-name">To Do</div><div class="col-cnt" id="cnt-todo">0</div><div class="col-pts" id="pts-todo"></div></div>
+    <div class="cards" id="cards-todo" ondragover="ov(event)" ondrop="drop(event,'todo')" ondragleave="ol(event)"></div>
+    <div class="empty-col" id="empty-todo" style="display:none">No tasks</div>
+    <button class="add-btn" onclick="openModal('todo')">+ Add task</button>
+  </div>
+  <div class="column col-progress">
+    <div class="col-header"><div class="dot"></div><div class="col-name">In Progress</div><div class="col-cnt" id="cnt-progress">0</div><div class="col-pts" id="pts-progress"></div></div>
+    <div class="cards" id="cards-progress" ondragover="ov(event)" ondrop="drop(event,'progress')" ondragleave="ol(event)"></div>
+    <div class="empty-col" id="empty-progress" style="display:none">No tasks</div>
+    <button class="add-btn" onclick="openModal('progress')">+ Add task</button>
+  </div>
+  <div class="column col-test">
+    <div class="col-header"><div class="dot"></div><div class="col-name">In Test</div><div class="col-cnt" id="cnt-test">0</div><div class="col-pts" id="pts-test"></div></div>
+    <div class="cards" id="cards-test" ondragover="ov(event)" ondrop="drop(event,'test')" ondragleave="ol(event)"></div>
+    <div class="empty-col" id="empty-test" style="display:none">No tasks</div>
+    <button class="add-btn" onclick="openModal('test')">+ Add task</button>
+  </div>
+  <div class="column col-done">
+    <div class="col-header"><div class="dot"></div><div class="col-name">Done</div><div class="col-cnt" id="cnt-done">0</div><div class="col-pts" id="pts-done"></div></div>
+    <div class="cards" id="cards-done" ondragover="ov(event)" ondrop="drop(event,'done')" ondragleave="ol(event)"></div>
+    <div class="empty-col" id="empty-done" style="display:none">No tasks</div>
+    <button class="add-btn" onclick="openModal('done')">+ Add task</button>
+  </div>
+</div>
+
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Add Task</h2>
+    <div class="mrow">
+      <div><label>ID</label><input id="m-id" placeholder="MEM-58" /></div>
+      <div><label>Points</label><input id="m-pts" type="number" placeholder="3" /></div>
+    </div>
+    <label>Title</label>
+    <input id="m-title" placeholder="Short task title" />
+    <label>Description</label>
+    <textarea id="m-desc" placeholder="What needs to be done?"></textarea>
+    <div class="mrow">
+      <div>
+        <label>Type</label>
+        <select id="m-type">
+          <option value="story">Story</option>
+          <option value="task">Task</option>
+          <option value="feature">Feature</option>
+          <option value="bug">Bug</option>
+          <option value="test">Test</option>
+          <option value="spike">Spike</option>
+        </select>
+      </div>
+      <div>
+        <label>Sprint</label>
+        <select id="m-sprint">
+          <option value="s1">Sprint 1</option>
+          <option value="s2">Sprint 2</option>
+          <option value="s3">Sprint 3</option>
+          <option value="s4">Sprint 4</option>
+          <option value="s5">Sprint 5</option>
+          <option value="s6">Sprint 6</option>
+        </select>
+      </div>
+      <div>
+        <label>Epic</label>
+        <select id="m-epic">
+          <option value="E1">E1 Foundation</option>
+          <option value="E2">E2 AI Pipeline</option>
+          <option value="E3">E3 Collections</option>
+          <option value="E4">E4 Chapters</option>
+          <option value="E5">E5 Photos</option>
+          <option value="E6">E6 Search</option>
+          <option value="E7">E7 Digests</option>
+          <option value="E8">E8 Monetization</option>
+          <option value="E9">E9 Security</option>
+          <option value="E10">E10 Export</option>
+          <option value="E11">E11 Testing</option>
+          <option value="E12">E12 CI/CD</option>
+          <option value="E13">E13 Launch</option>
+        </select>
+      </div>
+    </div>
+    <div class="macts">
+      <button class="btn btn-c" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-p" onclick="submitModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLS = ['todo','progress','test','done'];
+const S_LABELS = { s1:'Sprint 1', s2:'Sprint 2', s3:'Sprint 3', s4:'Sprint 4', s5:'Sprint 5', s6:'Sprint 6' };
+
+// ── ALL 57 TASKS ─────────────────────────────────────────────────────────────
+const DEFAULTS = [
+  // ── SPRINT 1 — Foundation ────────────────────────────────────────────────
+  { id:'MEM-01', title:'Project Initialization', desc:'Monorepo with npm workspaces, apps/mobile (Expo), apps/backend (Fastify), packages/shared, .gitignore, README, .env.example.', type:'task', sprint:'s1', epic:'E1', pts:2, col:'done' },
+  { id:'MEM-02', title:'Supabase Setup', desc:'Create project, run full schema SQL, enable RLS on all tables, create storage buckets: audio, images, pdfs. Test connection from backend.', type:'task', sprint:'s1', epic:'E1', pts:3, col:'done' },
+  { id:'MEM-03', title:'Authentication Screens (Mobile)', desc:'Login, Signup, ForgotPassword screens. Supabase Auth integration. Persist session with SecureStore.', type:'story', sprint:'s1', epic:'E1', pts:5, col:'done' },
+  { id:'MEM-04', title:'Auth Tests (Mobile)', desc:'Unit tests for auth screens (RNTL). E2E tests: signup, login, logout (Detox). Mock Supabase Auth in test environment.', type:'test', sprint:'s1', epic:'E1', pts:3, col:'done' },
+  { id:'MEM-05', title:'Entry Creation Screen (Text)', desc:'Text area with character count. Save → POST /entries with input_type: text. Loading state + success feedback. Navigate to entries list.', type:'story', sprint:'s1', epic:'E1', pts:5, col:'done' },
+  { id:'MEM-06', title:'Entry Creation Screen (Voice)', desc:'Mic button with record/stop states. Request mic permission on tap. Upload audio to Supabase Storage. POST /entries with input_type: voice, audio_url.', type:'story', sprint:'s1', epic:'E1', pts:5, col:'done' },
+  { id:'MEM-07', title:'Entries API (Backend)', desc:'POST /entries, GET /entries (paginated), GET /entries/:id, DELETE /entries/:id. Auth middleware on all routes. Input validation with Zod.', type:'task', sprint:'s1', epic:'E1', pts:5, col:'done' },
+  { id:'MEM-08', title:'Entries List Screen (Mobile)', desc:'Timeline with entry cards: type badge, timestamp, transcript preview, emotion tags. Pull to refresh, infinite scroll, empty state.', type:'story', sprint:'s1', epic:'E1', pts:3, col:'done' },
+  { id:'MEM-09', title:'Backend Unit Tests (Sprint 1)', desc:'Tests for /entries routes (Vitest + Supertest), auth middleware tests. Minimum 80% coverage on new code.', type:'test', sprint:'s1', epic:'E1', pts:3, col:'done' },
+  { id:'MEM-49', title:'GitHub Actions CI/CD Setup', desc:'Create mobile-ci.yml (lint + test + EAS build) and backend-ci.yml (lint + test + Railway deploy). Set up all GitHub Secrets. Test with dummy PR.', type:'task', sprint:'s1', epic:'E12', pts:5, col:'done' },
+
+  // ── SPRINT 2 — AI Pipeline + Collections ────────────────────────────────
+  { id:'MEM-10', title:'BullMQ + Redis Setup', desc:'Install and configure BullMQ + Redis. Create entry-processing queue. Add fire-and-forget enqueue when entry is saved. Create worker process.', type:'task', sprint:'s2', epic:'E2', pts:3, col:'done' },
+  { id:'MEM-11', title:'Whisper Transcription Worker', desc:'Worker picks up voice entries from queue. Download audio from Supabase Storage. Send to Whisper API. Save transcript. Stub fallback when no API key.', type:'task', sprint:'s2', epic:'E2', pts:5, col:'done' },
+  { id:'MEM-12', title:'Claude Analysis Worker', desc:'Anonymize transcript, call Claude analyzeEntry, deanonymize results, save emotions/people/topics. Generate embedding. Full stub fallback mode.', type:'task', sprint:'s2', epic:'E2', pts:5, col:'done' },
+  { id:'MEM-13', title:'Anonymizer Service', desc:'Two-pass regex with STOP_WORDS. anonymize() → nameMap. deanonymize() restores real names. Unit tested edge cases.', type:'task', sprint:'s2', epic:'E2', pts:3, col:'done' },
+  { id:'MEM-14', title:'AI Pipeline Tests', desc:'Unit tests: Whisper service (mock API), Claude service (mock API), Anonymizer. Integration test: full pipeline for text + voice entries.', type:'test', sprint:'s2', epic:'E2', pts:5, col:'done' },
+  { id:'MEM-15', title:'Collections API (Backend)', desc:'POST /collections, GET /collections, GET /collections/:id (with entries), PATCH, POST /:id/close, POST /:id/entries, DELETE /:id/entries/:entryId.', type:'task', sprint:'s2', epic:'E3', pts:5, col:'done' },
+  { id:'MEM-16', title:'Create Collection Screen (Mobile)', desc:'As a user, I can create a named collection. Name input + optional description. Calendar picker for start date. POST /collections on save.', type:'story', sprint:'s2', epic:'E3', pts:3, col:'done' },
+  { id:'MEM-17', title:'Collection Detail Screen (Mobile)', desc:'Tab bar: Entries / Chapter / Insights. Stats: total entries, voice/text/photo counts. Add entries button. Close collection button (with confirmation dialog).', type:'story', sprint:'s2', epic:'E3', pts:5, col:'done' },
+  { id:'MEM-18', title:'Collections List Screen (Mobile)', desc:'Cards showing: name, status, entry count, date range. Active collections badge in gold. Closed collections show "Chapter ready".', type:'story', sprint:'s2', epic:'E3', pts:3, col:'done' },
+  { id:'MEM-19', title:'Collections Tests', desc:'Backend: route tests for all collection endpoints. Mobile: component tests for CollectionCard. E2E — create, add entry, close collection.', type:'test', sprint:'s2', epic:'E3', pts:3, col:'done' },
+  { id:'MEM-52', title:'Staging Environment', desc:'Create Railway staging environment. Separate Supabase project for staging. Auto-deploy develop branch to staging. Smoke test after each deploy.', type:'task', sprint:'s2', epic:'E12', pts:3, col:'todo' },
+
+  // ── SPRINT 3 — Chapters + Photos ─────────────────────────────────────────
+  { id:'MEM-20', title:'Chapter Generation Worker', desc:'Triggered when collection is closed. Fetch all entries + photos. Build chapter prompt. Call Claude writeChapter API. Save to chapters table. Push notification: "Your chapter is ready".', type:'task', sprint:'s3', epic:'E4', pts:8, col:'done' },
+  { id:'MEM-21', title:'Chapter View Screen (Mobile)', desc:'Literary text display with Playfair Display font. Style selector: Warm / Formal / Narrative. Regenerate button. Word count + timestamp. Inline photos.', type:'story', sprint:'s3', epic:'E4', pts:5, col:'done' },
+  { id:'MEM-22', title:'Chapter Regeneration', desc:'As a premium user, I can regenerate my chapter in a different style. POST /chapters/:id/regenerate with new style. Free users see paywall.', type:'story', sprint:'s3', epic:'E4', pts:3, col:'done' },
+  { id:'MEM-23', title:'Chapter Tests', desc:'Unit tests: buildChapterPrompt function. Integration test: chapter worker with mocked Claude. Mobile: chapter view component tests.', type:'test', sprint:'s3', epic:'E4', pts:5, col:'done' },
+  { id:'MEM-24', title:'Photo Upload (Mobile)', desc:'As a premium user, I can attach up to 5 photos to any entry. Expo Image Picker + Manipulator (compress to 1200px). Upload to Supabase Storage. Photo strip on entry card. Paywall for free.', type:'story', sprint:'s3', epic:'E5', pts:8, col:'done' },
+  { id:'MEM-25', title:'Photo Storage (Backend)', desc:'Validate max 5 images per entry. Validate file types (jpg, png, webp). Validate file size (max 5MB). Store URLs in entry.image_urls array.', type:'task', sprint:'s3', epic:'E5', pts:3, col:'done' },
+  { id:'MEM-26', title:'Claude Vision Integration', desc:'Update analysis worker to include images in Claude request. Update chapter worker to include images. Fallback: if image fetch fails, continue without it.', type:'task', sprint:'s3', epic:'E5', pts:5, col:'done' },
+  { id:'MEM-27', title:'Photo Tests', desc:'Unit tests: image compression utility, Claude vision request builder. E2E: paywall for free user on photo tap. E2E: premium user attaches and saves photo.', type:'test', sprint:'s3', epic:'E5', pts:5, col:'done' },
+
+  // ── SPRINT 4 — Search + Digests ──────────────────────────────────────────
+  { id:'MEM-28', title:'Semantic Search API (Backend)', desc:'POST /search — generate query embedding, pgvector cosine similarity search, return top 10 entries with similarity score.', type:'task', sprint:'s4', epic:'E6', pts:5, col:'todo' },
+  { id:'MEM-29', title:'Search Screen (Mobile)', desc:'As a premium user, I can search memories with natural language. Input: "every time I felt homesick". Similarity-ranked results. Paywall for free users.', type:'story', sprint:'s4', epic:'E6', pts:5, col:'todo' },
+  { id:'MEM-30', title:'Search Tests', desc:'Backend: search endpoint with mock pgvector. Mobile: search screen component tests.', type:'test', sprint:'s4', epic:'E6', pts:3, col:'todo' },
+  { id:'MEM-31', title:'Weekly Digest Worker', desc:'Cron job every Friday 8am (user timezone). Fetch entries from past 7 days. Build digest prompt. Generate with Claude. Save to digests table. Push + email via Resend.', type:'task', sprint:'s4', epic:'E7', pts:5, col:'todo' },
+  { id:'MEM-32', title:'Monthly Digest Worker', desc:'Cron job on last day of month. Premium users only. Deeper analysis: top emotions, patterns, key people. Send via push + email.', type:'task', sprint:'s4', epic:'E7', pts:5, col:'todo' },
+  { id:'MEM-33', title:'Digest Display Screen (Mobile)', desc:'Digest cards with week/month label, summary text. Archive list sorted by date. Weekly digest for free, monthly for premium.', type:'story', sprint:'s4', epic:'E7', pts:3, col:'todo' },
+  { id:'MEM-34', title:'Digest Tests', desc:'Unit tests: digest workers (mock Claude), cron scheduling logic. Integration test: digest email sending (Resend mock).', type:'test', sprint:'s4', epic:'E7', pts:3, col:'todo' },
+  { id:'MEM-50', title:'E2E Pipeline', desc:'Create e2e.yml GitHub Actions pipeline. Run on PRs to main. Run nightly on schedule. Upload Detox artifacts on failure.', type:'task', sprint:'s4', epic:'E12', pts:3, col:'todo' },
+
+  // ── SPRINT 5 — Monetization + Security + Export ──────────────────────────
+  { id:'MEM-35', title:'RevenueCat Setup', desc:'Create RevenueCat project. Configure iOS + Android products ($7/month, $60/year). 14-day free trial. Install react-native-purchases SDK. Hook up to user account.', type:'task', sprint:'s5', epic:'E8', pts:5, col:'todo' },
+  { id:'MEM-36', title:'Paywall Screen (Mobile)', desc:'Beautiful upgrade screen shown when free user hits limits. Feature list, monthly/annual toggle, "Start 14-day free trial" CTA, restore purchase button.', type:'story', sprint:'s5', epic:'E8', pts:5, col:'todo' },
+  { id:'MEM-37', title:'Feature Gating', desc:'Implement LIMITS object. useSubscription hook. Gate: photos, chapter writing, search, monthly digest, PDF. Track monthly voice minutes + text entry count. Backend: validate plan on premium endpoints.', type:'task', sprint:'s5', epic:'E8', pts:5, col:'todo' },
+  { id:'MEM-38', title:'RevenueCat Webhook', desc:'POST /webhooks/revenuecat. Handle: purchase, renewal, cancellation, refund. Update user.plan in database accordingly.', type:'task', sprint:'s5', epic:'E8', pts:3, col:'todo' },
+  { id:'MEM-39', title:'Monetization Tests', desc:'Unit tests: LIMITS gating logic, RevenueCat webhook handler. Mobile: paywall renders for free users, not for premium. E2E: free user hits limit → paywall shown.', type:'test', sprint:'s5', epic:'E8', pts:5, col:'todo' },
+  { id:'MEM-40', title:'Privacy Dashboard Screen (Mobile)', desc:'As a user, I can see all data stored about me: entry count, audio storage, photos stored, AI processing status. Links to: export data, delete account, privacy policy.', type:'story', sprint:'s5', epic:'E9', pts:5, col:'todo' },
+  { id:'MEM-41', title:'Data Export', desc:'As a user, I can download all my data as a ZIP. Contents: all entries (JSON), transcripts (TXT), chapters (TXT), audio files. POST /account/export → generates ZIP → emails download link.', type:'story', sprint:'s5', epic:'E9', pts:5, col:'todo' },
+  { id:'MEM-42', title:'Account Deletion', desc:'Confirmation dialog with email verification. Soft delete: 30-day recovery window. Hard delete: all data removed after 30 days. Cancels RevenueCat subscription.', type:'story', sprint:'s5', epic:'E9', pts:3, col:'todo' },
+  { id:'MEM-43', title:'Security Audit', desc:'Audit all RLS policies. Verify no data leaks across users. Test API with invalid tokens. Verify image upload size limits enforced.', type:'spike', sprint:'s5', epic:'E9', pts:3, col:'todo' },
+  { id:'MEM-44', title:'PDF Export', desc:'As a premium user, I can export my chapter as a PDF. Book-style layout with text + inline photos. Generated on backend (puppeteer or react-pdf). Download link via push notification.', type:'story', sprint:'s5', epic:'E10', pts:8, col:'todo' },
+  { id:'MEM-45', title:'Instagram Share Card', desc:'As a user, I can share a beautiful image card from any chapter. Card: quote + photo background + Memoir watermark. Generated as PNG on backend. Native share sheet.', type:'story', sprint:'s5', epic:'E10', pts:5, col:'todo' },
+  { id:'MEM-46', title:'Export Tests', desc:'Unit tests: PDF generation service, share card image generation. Integration test: export endpoint.', type:'test', sprint:'s5', epic:'E10', pts:3, col:'todo' },
+
+  // ── SPRINT 6 — Testing + Launch ──────────────────────────────────────────
+  { id:'MEM-47', title:'Test Coverage Audit', desc:'Check coverage reports for mobile and backend. Identify gaps below 80% threshold. Write missing tests to reach target.', type:'test', sprint:'s6', epic:'E11', pts:3, col:'todo' },
+  { id:'MEM-48', title:'E2E Full Regression', desc:'Run full Detox suite on iOS simulator + Android emulator. Fix any failing tests. Record test videos for reference.', type:'test', sprint:'s6', epic:'E11', pts:5, col:'todo' },
+  { id:'MEM-51', title:'Release Pipeline', desc:'Create release.yml GitHub Actions pipeline. Tag-triggered (v*). Submit to App Store + Play Store via EAS Submit. Create GitHub Release with auto-generated notes.', type:'task', sprint:'s6', epic:'E12', pts:3, col:'todo' },
+  { id:'MEM-53', title:'App Store Preparation', desc:'App name, subtitle, keywords, description. 6 screenshots (all required sizes). App preview video. Privacy policy URL. Age rating: 4+. Submit for review (1–3 days).', type:'task', sprint:'s6', epic:'E13', pts:5, col:'todo' },
+  { id:'MEM-54', title:'Google Play Preparation', desc:'Store listing: title, short/full description. Feature graphic (1024x500). Screenshots (phone + tablet). Content rating questionnaire. Privacy policy URL. Submit for review.', type:'task', sprint:'s6', epic:'E13', pts:5, col:'todo' },
+  { id:'MEM-55', title:'Landing Page', desc:'Deploy landing page to getmemoir.com. Add App Store + Google Play download buttons. Replace waitlist form with download links. Add privacy policy page.', type:'task', sprint:'s6', epic:'E13', pts:2, col:'todo' },
+  { id:'MEM-56', title:'Product Hunt Launch', desc:'Create Product Hunt page. Prepare: tagline, description, gallery (5 images + 1 video). Schedule launch day. Prepare hunter with followers. Notify beta users to upvote.', type:'task', sprint:'s6', epic:'E13', pts:3, col:'todo' },
+  { id:'MEM-57', title:'Beta Testing', desc:'Invite 50–100 beta testers via TestFlight + Play Console. Create feedback form (Tally/Typeform). 2-week beta period. Fix critical bugs. Collect testimonials for App Store listing.', type:'task', sprint:'s6', epic:'E13', pts:3, col:'todo' },
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+function load() {
+  try { const s = localStorage.getItem('memoir-board-v3'); return s ? JSON.parse(s) : DEFAULTS.map(t=>({...t})); }
+  catch { return DEFAULTS.map(t=>({...t})); }
+}
+function save() { localStorage.setItem('memoir-board-v3', JSON.stringify(tasks)); }
+
+let tasks = load();
+let dragId = null;
+let filters = { sprint:'all', epic:'all' };
+let modalCol = 'todo';
+let editId = null;
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  COLS.forEach(col => {
+    const c = document.getElementById('cards-'+col);
+    c.innerHTML = '';
+    tasks.filter(t=>t.col===col).forEach(t => c.appendChild(makeCard(t)));
+  });
+  applyFilters();
+  updateStats();
+}
+
+function makeCard(t) {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.dataset.id = t.id;
+  d.dataset.sprint = t.sprint;
+  d.dataset.epic = t.epic;
+  d.draggable = true;
+  d.addEventListener('dragstart', e => { dragId=t.id; d.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+  d.addEventListener('dragend', () => d.classList.remove('dragging'));
+  d.addEventListener('dblclick', () => openEdit(t.id));
+
+  const prev = COLS[COLS.indexOf(t.col)-1];
+  const next = COLS[COLS.indexOf(t.col)+1];
+  d.innerHTML = `
+    <div class="ct">
+      <span class="cid">${t.id}</span>
+      <span class="ctype t-${t.type}">${t.type}</span>
+    </div>
+    <div class="ctitle">${t.title}</div>
+    ${t.desc ? `<div class="cdesc">${t.desc}</div>` : ''}
+    <div class="cf">
+      <span class="stag ${t.sprint}">${S_LABELS[t.sprint]}</span>
+      <span class="etag">${t.epic}</span>
+      <span class="pts">${t.pts}pt</span>
+      <div class="cmv">
+        ${prev ? `<button class="mv" title="← ${COLS[COLS.indexOf(t.col)-1]}" onclick="mv('${t.id}','${prev}')">←</button>` : ''}
+        ${next ? `<button class="mv" title="→ ${COLS[COLS.indexOf(t.col)+1]}" onclick="mv('${t.id}','${next}')">→</button>` : ''}
+      </div>
+    </div>`;
+  return d;
+}
+
+// ── MOVE ─────────────────────────────────────────────────────────────────────
+function mv(id, col) {
+  const t = tasks.find(t=>t.id===id);
+  if (t) { t.col=col; save(); render(); }
+}
+
+// ── DRAG ─────────────────────────────────────────────────────────────────────
+function ov(e) { e.preventDefault(); e.currentTarget.classList.add('over'); }
+function ol(e) { e.currentTarget.classList.remove('over'); }
+function drop(e, col) {
+  e.preventDefault(); e.currentTarget.classList.remove('over');
+  if (dragId) { mv(dragId, col); dragId=null; }
+}
+
+// ── FILTER ───────────────────────────────────────────────────────────────────
+function setFilter(type, val, btn) {
+  filters[type] = val;
+  btn.closest('.toolbar').querySelectorAll('.pill').forEach(p => {
+    if (p.onclick && p.onclick.toString().includes(`'${type}'`)) p.classList.remove('active');
+  });
+  btn.classList.add('active');
+  applyFilters();
+  updateStats();
+}
+
+function applyFilters() {
+  COLS.forEach(col => {
+    const c = document.getElementById('cards-'+col);
+    let vis = 0;
+    c.querySelectorAll('.card').forEach(card => {
+      const ok = (filters.sprint==='all' || card.dataset.sprint===filters.sprint)
+               && (filters.epic==='all'   || card.dataset.epic===filters.epic);
+      card.classList.toggle('hidden', !ok);
+      if (ok) vis++;
+    });
+    document.getElementById('cnt-'+col).textContent = vis;
+    const pts = tasks.filter(t=>t.col===col && visible(t)).reduce((s,t)=>s+(t.pts||0),0);
+    document.getElementById('pts-'+col).textContent = pts ? pts+'pts' : '';
+    document.getElementById('empty-'+col).style.display = vis===0 ? 'block' : 'none';
+  });
+}
+
+function visible(t) {
+  return (filters.sprint==='all' || t.sprint===filters.sprint)
+      && (filters.epic==='all'   || t.epic===filters.epic);
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const f = tasks.filter(visible);
+  const done = f.filter(t=>t.col==='done');
+  const dpts = done.reduce((s,t)=>s+(t.pts||0),0);
+  const tpts = f.reduce((s,t)=>s+(t.pts||0),0);
+  document.getElementById('st-total').textContent = f.length;
+  document.getElementById('st-done').textContent  = done.length;
+  document.getElementById('st-pts').textContent   = `${dpts}/${tpts}`;
+  const pct = f.length ? Math.round(done.length/f.length*100) : 0;
+  document.getElementById('st-pct').textContent   = pct+'%';
+  document.getElementById('pbar').style.width     = pct+'%';
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function openModal(col) {
+  modalCol = col; editId = null;
+  document.getElementById('modal-title').textContent = 'Add Task';
+  ['m-id','m-title','m-desc'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('m-pts').value = '3';
+  document.getElementById('m-type').value = 'story';
+  document.getElementById('m-sprint').value = 's3';
+  document.getElementById('m-epic').value = 'E1';
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('m-id').focus();
+}
+
+function openEdit(id) {
+  const t = tasks.find(t=>t.id===id);
+  if (!t) return;
+  editId = id; modalCol = t.col;
+  document.getElementById('modal-title').textContent = 'Edit Task';
+  document.getElementById('m-id').value    = t.id;
+  document.getElementById('m-title').value = t.title;
+  document.getElementById('m-desc').value  = t.desc||'';
+  document.getElementById('m-pts').value   = t.pts||3;
+  document.getElementById('m-type').value  = t.type;
+  document.getElementById('m-sprint').value= t.sprint;
+  document.getElementById('m-epic').value  = t.epic;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function submitModal() {
+  const id    = document.getElementById('m-id').value.trim();
+  const title = document.getElementById('m-title').value.trim();
+  const desc  = document.getElementById('m-desc').value.trim();
+  const pts   = parseInt(document.getElementById('m-pts').value)||3;
+  const type  = document.getElementById('m-type').value;
+  const sprint= document.getElementById('m-sprint').value;
+  const epic  = document.getElementById('m-epic').value;
+  if (!id||!title) { alert('ID and Title are required'); return; }
+  if (editId) {
+    const t = tasks.find(t=>t.id===editId);
+    Object.assign(t, {id,title,desc,pts,type,sprint,epic});
+  } else {
+    if (tasks.find(t=>t.id===id)) { alert('ID already exists'); return; }
+    tasks.push({id,title,desc,pts,type,sprint,epic,col:modalCol});
+  }
+  save(); render(); closeModal();
+}
+
+document.getElementById('modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); });
+
+render();
+</script>
+</body>
+</html>
