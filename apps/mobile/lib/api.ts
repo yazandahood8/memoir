@@ -81,6 +81,7 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ style }),
       }),
+    pdfUrl: (id: string) => `${BASE_URL}/chapters/${id}/pdf`,
   },
 
   search: {
@@ -94,5 +95,11 @@ export const api = {
   digests: {
     list: () => request<Digest[]>('/digests'),
     get: (id: string) => request<Digest>(`/digests/${id}`),
+  },
+
+  account: {
+    profile: () => request<{ id: string; email: string; plan: string; created_at: string; stats: { entries: number; collections: number } }>('/account/profile'),
+    export: () => request<object>('/account/export', { method: 'POST' }),
+    delete: () => request<void>('/account', { method: 'DELETE' }),
   },
 };
