@@ -9,6 +9,7 @@ import { collectionsRoutes } from './routes/collections.js';
 import { chaptersRoutes } from './routes/chapters.js';
 import { searchRoutes } from './routes/search.js';
 import { digestsRoutes } from './routes/digests.js';
+import { accountRoutes } from './routes/account.js';
 import { webhooksRoutes } from './routes/webhooks.js';
 
 export async function build(opts: { testing?: boolean } = {}) {
@@ -63,6 +64,7 @@ export async function build(opts: { testing?: boolean } = {}) {
   await app.register(chaptersRoutes, { prefix: '/chapters' });
   await app.register(searchRoutes, { prefix: '/search' });
   await app.register(digestsRoutes, { prefix: '/digests' });
+  await app.register(accountRoutes, { prefix: '/account' });
   await app.register(webhooksRoutes, { prefix: '/webhooks' });
 
   app.get('/health', async () => ({ status: 'ok' }));
